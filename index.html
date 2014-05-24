@@ -1,0 +1,168 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Balancer</title>
+    <link rel="stylesheet" href="css/foundation.css" />
+    <script src="js/vendor/modernizr.js"></script>
+  </head>
+  <body>
+       
+    <div class="row">
+      <div class="large-12 columns">
+        <div class="panel">
+          
+          <fieldset>
+            <legend>Players</legend>
+            <div class="row" id="playerList"></div>
+          </fieldset>
+          
+          <fieldset>
+            <legend>Teams</legend>
+            <div class="row" id="teamList"></div>
+          </fieldset>
+
+          <a href="#" class="small radius button" id="btnAddPlayer">Add Player</a>
+          <a href="#" class="small radius button" id="btnAddTeam">Add Team</a>
+          <a href="#" class="small radius success button right" id="btnCreateTeams">Create Teams</a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="large-12 columns" id="output"></div>
+    </div>
+    
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script>
+      
+      $(document).foundation();
+
+      // Global variables
+      var players = [], teams = [];
+      var playerCount = 0, teamCount = 0;
+
+      // Functions
+      function addPlayer(num) {
+        num = num || 1;
+        for(var p=0; p<num; p++) {
+          playerCount++;
+          $('#playerList').append('<div class="large-6 medium-6 columns"><input type="text" id="name' + playerCount + '" class="name" value="Player ' + playerCount + '" /></div><div class="large-6 medium-6 columns"><select id="skill' + playerCount + '" class="skill"><option value="1">1 - Total Newbie</option><option value="2">2</option><option value="3" selected="selected">3 - Average Joe</option><option value="4">4</option><option value="5">5 - World Champion</option></select></div>');
+        }
+      }
+
+      function addTeam(num) {
+        num = num || 1;
+        for(var t=0; t<num; t++) {
+          teamCount++;
+          $('#teamList').append('<div class="large-6 medium-6 columns end"><input type="text" value="Team ' + teamCount + '" id="team' + teamCount + '" /></div>');
+        }
+      }
+
+      function Player(name, skill) {
+        this.name = name;
+        this.skill = skill;
+      }
+
+      function Team(name, skill, index) {
+        this.name = name;
+        this.skill = skill;
+        this.index = index;
+      }
+
+      function createTeams() {
+
+        // Reset
+        players = [];
+        teams = [];
+        $('#output').html('');
+
+        if(teamCount > playerCount) {
+          $('#output').append('<div class="alert-box alert radius">There are more teams than players</div>');
+        }
+
+        // Put all teams into an array
+        $("#teamList input").each(function(index) {
+          teams.push(new Team($(this).val(), 0, index));
+        });
+
+        // Put all players into another array
+        for(i=1; i<=playerCount; i++) {
+          players.push(new Player($('#name'+i).val(), parseInt($('#skill'+i).val(), 10)));
+        }
+        
+        // Sort the arrays by skill
+        function sortAll() {
+          players.sort(function(a, b) {
+            if(a.skill < b.skill) { return 1; }
+            if(a.skill > b.skill) { return -1;}
+            return 0;
+          });
+          teams.sort(function(a, b) {
+            if(a.skill > b.skill) { return 1; }
+            if(a.skill < b.skill) { return -1;}
+            return 0;
+          });
+        }
+
+        sortAll();
+
+        // Put one player into each team, starting with the most-skilled
+        for(i=0, numTeams=teams.length; i<numTeams; i++) {
+          teams[i].members = []; // Create a 'members' array for each team
+          teams[i].members.push(players[0]);
+          teams[i].skill += players[0].skill; // Add to the team's skill counter
+          players.shift(); // Remove the most-skilled player from the array and shift the rest up
+        }
+
+        // Move the rest of the players into teams
+        $(players).each(function() {
+          sortAll();
+          // Make sure the team is not any more than 1 different
+          for(i=0, numTeams=teams.length-1; i<numTeams; i++) {
+            if((teams[i].members.length - teams[i+1].members.length) > 1) {
+              continue;
+            } else {
+              break;
+            }
+          }
+          teams[i].members.push({name: players[0].name, skill: players[0].skill});
+          teams[i].skill += players[0].skill;
+          players.shift();
+        });
+
+        // Now sort the teams by their index, so it matches the input order
+        teams.sort(function(a, b) {
+          return a.index - b.index;
+        });
+
+        // Generate output HTML
+        $(teams).each(function(i) {
+          teamName = '<div class="large-2 medium-2 columns"><strong>' + teams[i].name + '</strong></div>';
+          memberList = [];
+          for(p=0, numPlayers=teams[i].members.length; p<numPlayers; p++) {
+            memberList.push(teams[i].members[p].name);
+          }
+          members = '<div class="large-9 medium-9 columns">' + memberList.join(', ') + '</div>';
+          totalSkill = '<div class="large-1 medium-1 columns" style="font-size:2.5em">' + teams[i].skill + '</div>';
+          $('#output').append('<div class="row" style="border-bottom:1px solid #CCC; margin:0.5em; padding:0.5em">' + teamName + members + totalSkill + '</div>');
+        });
+        console.log(teams);
+
+      }
+
+      // Event Handlers
+      $('#btnAddPlayer').click(function() { addPlayer(); });
+      $('#btnAddTeam').click(function() { addTeam(); });
+      $('#btnCreateTeams').click(function() { createTeams(); });
+
+      // Inital Setup
+      addPlayer(4);
+      addTeam(2);
+
+    </script>
+  </body>
+</html>
