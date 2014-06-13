@@ -47,16 +47,18 @@
 
       // Functions
       function addPlayer(num) {
+        var p;
         num = num || 1;
-        for(var p=0; p<num; p++) {
+        for(p=0; p<num; p++) {
           playerCount++;
           $('#playerList').append('<div class="large-6 medium-6 columns"><input type="text" id="name' + playerCount + '" class="name" value="Player ' + playerCount + '" /></div><div class="large-6 medium-6 columns"><select id="skill' + playerCount + '" class="skill"><option value="1">1 - Total Newbie</option><option value="2">2</option><option value="3" selected="selected">3 - Average Joe</option><option value="4">4</option><option value="5">5 - World Champion</option></select></div>');
         }
       }
 
       function addTeam(num) {
+        var t;
         num = num || 1;
-        for(var t=0; t<num; t++) {
+        for(t=0; t<num; t++) {
           teamCount++;
           $('#teamList').append('<div class="large-6 medium-6 columns end"><input type="text" value="Team ' + teamCount + '" id="team' + teamCount + '" /></div>');
         }
@@ -74,6 +76,7 @@
       }
 
       function createTeams() {
+        var i, p, numTeams, numPlayers, memberList, members, teamName, totalSkill;
 
         // Reset
         players = [];
@@ -121,15 +124,12 @@
         // Move the rest of the players into teams
         $(players).each(function() {
           sortAll();
-          // Make sure the team is not any more than 1 different
-          for(i=0, numTeams=teams.length-1; i<numTeams; i++) {
-            if((teams[i].members.length - teams[i+1].members.length) > 1) {
-              continue;
-            } else {
-              break;
-            }
+          // Make sure the difference in team size is not any greater than 1
+          i = 0;
+          while((teams[i].members.length - teams[i+1].members.length) > 1) {
+            i++;
           }
-          teams[i].members.push({name: players[0].name, skill: players[0].skill});
+          teams[i].members.push(players[0]);
           teams[i].skill += players[0].skill;
           players.shift();
         });
@@ -150,7 +150,6 @@
           totalSkill = '<div class="large-1 medium-1 columns" style="font-size:2.5em">' + teams[i].skill + '</div>';
           $('#output').append('<div class="row" style="border-bottom:1px solid #CCC; margin:0.5em; padding:0.5em">' + teamName + members + totalSkill + '</div>');
         });
-        console.log(teams);
 
       }
 
